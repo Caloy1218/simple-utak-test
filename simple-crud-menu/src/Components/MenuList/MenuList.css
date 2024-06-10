@@ -1,0 +1,28 @@
+.menu-list-container {
+    /* Add your styles for the container */
+    /* For example: */
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .menu-item {
+    /* Add your styles for each menu item */
+    /* For example: */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .menu-item h3 {
+    /* Add styles for menu item headings if needed */
+  }
+  
+  .menu-item p {
+    /* Add styles for menu item paragraphs if needed */
+  }
+  
+  .menu-item button {
+    /* Add styles for buttons inside menu items if needed */
+  }
+  
