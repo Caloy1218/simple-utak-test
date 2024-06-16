@@ -1,15 +1,38 @@
 import { useEffect, useState } from 'react';
 import { db } from '../../firebase';
-import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, IconButton } from '@mui/material';
+import {
+  collection,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  updateDoc
+} from 'firebase/firestore';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import './MenuList.css';
+
+const categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage'];
+const optionsList = ['Small', 'Medium', 'Large']; // Example options list
 
 const MenuList = ({ setCurrentItem }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingItemId, setEditingItemId] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedItem, setEditedItem] = useState(null);
   const [menuCount, setMenuCount] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState({
     Appetizer: 0,
@@ -17,15 +40,15 @@ const MenuList = ({ setCurrentItem }) => {
     Dessert: 0,
     Beverage: 0
   });
+  const [selectedOption, setSelectedOption] = useState('');
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'menu'), (snapshot) => {
       const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setMenuItems(items);
       setFilteredItems(items);
-      setMenuCount(items.length); // Update the menu count
+      setMenuCount(items.length);
 
-      // Update the category counts
       const newCategoryCounts = {
         Appetizer: 0,
         'Main Course': 0,
@@ -33,7 +56,7 @@ const MenuList = ({ setCurrentItem }) => {
         Beverage: 0
       };
 
-      items.forEach(item => {
+      items.forEach((item) => {
         if (newCategoryCounts[item.category] !== undefined) {
           newCategoryCounts[item.category]++;
         }
@@ -46,15 +69,20 @@ const MenuList = ({ setCurrentItem }) => {
   }, []);
 
   const handleEdit = (id) => {
-    setEditingItemId(id);
+    const itemToEdit = menuItems.find((item) => item.id === id);
+    setEditedItem(itemToEdit);
+    setEditMode(true);
+    setSelectedOption(itemToEdit.options); // Initialize selectedOption with current options
   };
 
-  const handleSave = async (id) => {
-    const itemToEdit = menuItems.find(item => item.id === id);
+  const handleSave = async () => {
+    const { id, ...rest } = editedItem;
     const itemRef = doc(db, 'menu', id);
     try {
-      await updateDoc(itemRef, itemToEdit);
-      setEditingItemId(null);
+      await updateDoc(itemRef, rest);
+      setEditMode(false);
+      setEditedItem(null);
+      setSelectedOption(''); // Clear selectedOption after save
     } catch (error) {
       console.error('Error updating document: ', error);
     }
@@ -62,16 +90,16 @@ const MenuList = ({ setCurrentItem }) => {
 
   const handleDelete = async (id) => {
     try {
-      const itemToDelete = menuItems.find(item => item.id === id);
+      const itemToDelete = menuItems.find((item) => item.id === id);
       await deleteDoc(doc(db, 'menu', id));
 
       const updatedMenuItems = menuItems.filter((item) => item.id !== id);
       setMenuItems(updatedMenuItems);
       setFilteredItems(updatedMenuItems);
-      setMenuCount(updatedMenuItems.length); // Update the menu count correctly
+      setMenuCount(updatedMenuItems.length);
 
       if (itemToDelete) {
-        setCategoryCounts(prevCounts => ({
+        setCategoryCounts((prevCounts) => ({
           ...prevCounts,
           [itemToDelete.category]: prevCounts[itemToDelete.category] - 1
         }));
@@ -82,7 +110,7 @@ const MenuList = ({ setCurrentItem }) => {
   };
 
   const filterByCategory = (category) => {
-    if (category === "All") {
+    if (category === 'All') {
       setFilteredItems(menuItems);
     } else {
       setFilteredItems(menuItems.filter((item) => item.category === category));
@@ -100,12 +128,14 @@ const MenuList = ({ setCurrentItem }) => {
   const handleConfirmDeleteAll = async () => {
     setOpenDialog(false);
     try {
-      await Promise.all(menuItems.map(async (item) => {
-        await deleteDoc(doc(db, 'menu', item.id));
-      }));
+      await Promise.all(
+        menuItems.map(async (item) => {
+          await deleteDoc(doc(db, 'menu', item.id));
+        })
+      );
       setMenuItems([]);
       setFilteredItems([]);
-      setMenuCount(0); // Reset the menu count
+      setMenuCount(0);
       setCategoryCounts({
         Appetizer: 0,
         'Main Course': 0,
@@ -121,81 +151,99 @@ const MenuList = ({ setCurrentItem }) => {
     setOpenDialog(false);
   };
 
-  const handleChange = (id, field, value) => {
-    setMenuItems(menuItems.map(item => item.id === id ? { ...item, [field]: value } : item));
+  const handleChange = (field, value) => {
+    if (field === 'options') {
+      setSelectedOption(value);
+    }
+    setEditedItem((prevItem) => ({
+      ...prevItem,
+      [field]: value
+    }));
   };
 
   if (menuItems.length === 0) {
-    return null; // Hide the MenuList if no items
+    return null;
   }
 
   return (
     <div className="menu-list-container">
       <div className="buttons-container">
-        <Button onClick={() => filterByCategory("All")}>
+        <Button onClick={() => filterByCategory('All')}>
           All <span className="menu-count">{menuCount}</span>
         </Button>
-        <Button onClick={() => filterByCategory("Appetizer")}>
-          Appetizers <span className="menu-count">{categoryCounts.Appetizer}</span>
-        </Button>
-        <Button onClick={() => filterByCategory("Main Course")}>
-          Main Courses <span className="menu-count">{categoryCounts['Main Course']}</span>
-        </Button>
-        <Button onClick={() => filterByCategory("Dessert")}>
-          Desserts <span className="menu-count">{categoryCounts.Dessert}</span>
-        </Button>
-        <Button onClick={() => filterByCategory("Beverage")}>
-          Beverages <span className="menu-count">{categoryCounts.Beverage}</span>
-        </Button>
+        {categories.map((category) => (
+          <Button key={category} onClick={() => filterByCategory(category)}>
+            {category}{' '}
+            <span className="menu-count">{categoryCounts[category]}</span>
+          </Button>
+        ))}
         <Button onClick={handleDeleteAll}>Delete All</Button>
       </div>
       <div className="menu-item-container">
         {filteredItems.map((item) => (
           <div key={item.id} className="menu-item">
-            {editingItemId === item.id ? (
+            {editMode && editedItem && editedItem.id === item.id ? (
               <div className="edit-fields">
                 <TextField
                   label="Name"
-                  value={item.name}
-                  onChange={(e) => handleChange(item.id, 'name', e.target.value)}
+                  value={editedItem.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
                   fullWidth
                 />
-                <TextField
-                  label="Category"
-                  value={item.category}
-                  onChange={(e) => handleChange(item.id, 'category', e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="Options"
-                  value={item.options}
-                  onChange={(e) => handleChange(item.id, 'options', e.target.value)}
-                  fullWidth
-                />
+                <FormControl fullWidth>
+                  <InputLabel id={`category-label-${item.id}`}>
+                    Category
+                  </InputLabel>
+                  <Select
+                    labelId={`category-label-${item.id}`}
+                    value={editedItem.category}
+                    onChange={(e) => handleChange('category', e.target.value)}
+                  >
+                    {categories.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth>
+                  <InputLabel id={`options-label-${item.id}`}>Options</InputLabel>
+                  <Select
+                    labelId={`options-label-${item.id}`}
+                    value={selectedOption}
+                    onChange={(e) => handleChange('options', e.target.value)}
+                  >
+                    {optionsList.map((option) => (
+                      <MenuItem key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 <TextField
                   label="Price"
-                  value={item.price}
-                  onChange={(e) => handleChange(item.id, 'price', e.target.value)}
+                  value={editedItem.price}
+                  onChange={(e) => handleChange('price', e.target.value)}
                   type="number"
                   fullWidth
                 />
                 <TextField
                   label="Cost"
-                  value={item.cost}
-                  onChange={(e) => handleChange(item.id, 'cost', e.target.value)}
+                  value={editedItem.cost}
+                  onChange={(e) => handleChange('cost', e.target.value)}
                   type="number"
                   fullWidth
                 />
                 <TextField
                   label="Amount in stock"
-                  value={item.stock}
-                  onChange={(e) => handleChange(item.id, 'stock', e.target.value)}
+                  value={editedItem.stock}
+                  onChange={(e) => handleChange('stock', e.target.value)}
                   type="number"
                   fullWidth
                 />
               </div>
             ) : (
-              <div className='menu-list'>
+              <div className="menu-list">
                 <h3>{item.name}</h3>
                 <p>Category: {item.category}</p>
                 <p>Options: {item.options}</p>
@@ -205,13 +253,19 @@ const MenuList = ({ setCurrentItem }) => {
               </div>
             )}
             <div className="item-buttons">
-              {editingItemId === item.id ? (
-                <Button onClick={() => handleSave(item.id)}>OK</Button>
+              {editMode && editedItem && editedItem.id === item.id ? (
+                <Button onClick={handleSave}>Ok</Button>
               ) : (
                 <Button onClick={() => handleEdit(item.id)}>Edit</Button>
               )}
               <IconButton
-                style={{ position: 'absolute', top: 5, right: 5, color: 'white', background: '#ff4141' }}
+                style={{
+                  position: 'absolute',
+                  top: 5,
+                  right: 5,
+                  color: 'white',
+                  background: '#ff4141'
+                }}
                 onClick={() => handleDelete(item.id)}
               >
                 <CloseIcon />
@@ -226,7 +280,7 @@ const MenuList = ({ setCurrentItem }) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">{"Confirm Delete All"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">Confirm Delete All</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Are you sure you want to delete all menu items?
