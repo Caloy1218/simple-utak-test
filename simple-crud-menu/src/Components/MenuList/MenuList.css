@@ -116,3 +116,13 @@
 .item-buttons IconButton:hover {
     background: #e33e3e;
 }
+.item-buttons Button{
+    background-color: #198754;
+    color:White;
+    margin-left:auto !important;
+    
+}
+.item-buttons Button:hover{
+    background-color: white;
+    color: #198754;
+}
