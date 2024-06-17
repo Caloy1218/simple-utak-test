@@ -54,6 +54,7 @@
 }
 .menu-item-form Button {
     width: 20%;
+    max-width: 50%;
     background-color: #3f3f3f;
     margin-top: 10px;
     color: #f3f3f3;
@@ -79,28 +80,46 @@
         align-items: center;
         align-content: center;
     }
-  }
+    .menu-title .menuTitle-top , .menu-title .menuTitle-btm{
+        font-size: 70px;
+        }
+}
 
-  @media screen and (max-width: 600px){
+@media screen and (max-width: 775px){
+    .menu-itemForm-container {
+        padding: 0px;
+        margin: 0px;
+    }
+    .menu-title{
+        padding: 0px 20px
+    }
     .menu-item-form .menu-textfield-container {
         display: flex;
-        flex-direction: column;
-        flex-wrap:nowrap;
+        flex-direction: row;
+        flex-wrap:wrap;
+        padding:0px;
+        margin-top: -20px;
     }
     .menu-item-form{
-    flex:3.5;
-    margin: 0px;
-    padding:0px;
+        flex:3.5;
+        margin: 0px;
+        padding:0px;
+        gap:0px;
     }
     .menu-item-form .menu-textfield-container .menu-item-input {
-    width: 80%;
-    max-width: 350px;
+    font-size: 20px;
+    width: 150px;
+    border:none;
+    }
+    .menu-title .menuTitle-btm{
+        margin-top: -40px;
     }
     .menu-title .menuTitle-top , .menu-title .menuTitle-btm{
-    font-size: 70px;
+    font-size: 50px;
     }
     .menu-item-form .menu-textfield-container{
-    min-width: 300px;
+    min-width: 200px;
+
     }
     .menu-textfield-container Button{
         width: 400px;

@@ -19,11 +19,16 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import MenuIcon from '@mui/icons-material/Menu';
 import './MenuList.css';
-
+const screenWidth = window.innerWidth;
 const categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage'];
 const optionsList = ['Small', 'Medium', 'Large']; // Example options list
 
@@ -41,6 +46,7 @@ const MenuList = ({ setCurrentItem }) => {
     Beverage: 0
   });
   const [selectedOption, setSelectedOption] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'menu'), (snapshot) => {
@@ -161,9 +167,10 @@ const MenuList = ({ setCurrentItem }) => {
     }));
   };
 
-  if (menuItems.length === 0) {
-    return null;
-  }
+  const toggleDrawer = (open) => () => {
+    setDrawerOpen(open);
+  };
+  
 
   return (
     <div className="menu-list-container">
@@ -173,12 +180,60 @@ const MenuList = ({ setCurrentItem }) => {
         </Button>
         {categories.map((category) => (
           <Button key={category} onClick={() => filterByCategory(category)}>
-            {category}{' '}
-            <span className="menu-count">{categoryCounts[category]}</span>
+            {category} <span className="menu-count">{categoryCounts[category]}</span>
           </Button>
         ))}
         <Button onClick={handleDeleteAll}>Delete All</Button>
       </div>
+      <IconButton
+        edge="start"
+        color="inherit"
+        aria-label="menu"
+        onClick={toggleDrawer(true)}
+        className="menu-icon-button"
+        sx={{
+          display: { xs: 'block', sm: 'none' }, // Show on extra small screens (below 776px), hide on small screens and up
+          // Add other styles here if needed
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+        className="custom-drawer" // Add a class name for custom styling
+      >
+        <List>
+          <ListItem button onClick={() => {
+            toggleDrawer(false)();
+            filterByCategory('All');
+          }}>
+            <ListItemText primary={`All (${menuCount})`} />
+          </ListItem>
+          {categories.map((category) => (
+            <ListItem
+              button
+              key={category}
+              onClick={() => {
+                toggleDrawer(false)();
+                filterByCategory(category);
+              }}
+              className={filteredItems.some(item => item.category === category) ? 'active' : ''} // Check if category is active
+            >
+              <ListItemText primary={`${category} (${categoryCounts[category]})`} />
+            </ListItem>
+          ))}
+          <ListItem button onClick={() => {
+            toggleDrawer(false)();
+            handleDeleteAll();
+          }}>
+            <ListItemText primary="Delete All" />
+          </ListItem>
+        </List>
+      </Drawer>
+
+
       <div className="menu-item-container">
         {filteredItems.map((item) => (
           <div key={item.id} className="menu-item">
@@ -254,15 +309,16 @@ const MenuList = ({ setCurrentItem }) => {
             )}
             <div className="item-buttons">
               {editMode && editedItem && editedItem.id === item.id ? (
-                <Button onClick={handleSave}>Ok</Button>
+                <Button onClick={handleSave}>Save</Button>
               ) : (
                 <Button onClick={() => handleEdit(item.id)}>Edit</Button>
               )}
               <IconButton
+                aria-label="delete"
                 style={{
                   position: 'absolute',
-                  top: 5,
-                  right: 5,
+                  top:5,
+                  right:5,
                   color: 'white',
                   background: '#ff4141'
                 }}
