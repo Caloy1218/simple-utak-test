@@ -82,11 +82,12 @@
               }}
             />
             <FormControl
-              className="menu-item-input"
-              sx={{
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#3f3f3f' }
-              }}
+               className="menu-item-input"
+               sx={{
+                 '& .MuiOutlinedInput-root': { border: 'none' },
+                 '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                 '& .MuiInputLabel-root.Mui-focused': { color: '#3f3f3f' }
+               }}
             >
               <InputLabel>Category</InputLabel>
               <Select value={category} onChange={(e) => setCategory(e.target.value)} required>
@@ -97,11 +98,12 @@
               </Select>
             </FormControl>
             <FormControl
-              className="menu-item-input"
-              sx={{
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#3f3f3f' }
-              }}
+               className="menu-item-input"
+               sx={{
+                 '& .MuiOutlinedInput-root': { border: 'none' },
+                 '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                 '& .MuiInputLabel-root.Mui-focused': { color: '#3f3f3f' }
+               }}
             >
               <InputLabel>Options</InputLabel>
               <Select value={options} onChange={(e) => setOptions(e.target.value)} required>
